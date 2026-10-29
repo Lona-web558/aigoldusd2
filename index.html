@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AI Gold Chart · XAU/USD</title>
+<!-- Bootstrap 5 loads when this file is opened locally; the inline CSS below covers the subset used so the page also works where external stylesheets are blocked. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef0f3;--card:#fff;--ink:#1b2430;--mute:#66707e;--line:#d9dde3;--gold:#b88a14;--up:#1c9a78;--dn:#d4483f;--sma:#2f6fdb;--ema:#8a4fd1;--bb:#8b95a3;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12161c;--card:#1a2029;--ink:#e8ebf0;--mute:#8d97a6;--line:#2a323d;--gold:#e2b43c;--up:#2fc79e;--dn:#f0645a;--sma:#6ea2ff;--ema:#b58cf5;--bb:#7c8696}}
+:root[data-theme="dark"]{--bg:#12161c;--card:#1a2029;--ink:#e8ebf0;--mute:#8d97a6;--line:#2a323d;--gold:#e2b43c;--up:#2fc79e;--dn:#f0645a;--sma:#6ea2ff;--ema:#b58cf5;--bb:#7c8696}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.5 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;font-variant-numeric:tabular-nums}
+.container{max-width:1180px;margin:0 auto;padding:16px}
+.row{display:flex;flex-wrap:wrap;gap:16px}
+.col-lg-8{flex:1 1 640px;min-width:0}.col-lg-4{flex:1 1 280px;min-width:0}.col-12{flex:1 1 100%}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px}
+.card-body{padding:14px 16px}
+.btn{font:inherit;font-size:13px;background:transparent;color:var(--ink);border:1px solid var(--line);padding:5px 11px;border-radius:6px;cursor:pointer}
+.btn:hover{border-color:var(--gold)}.btn.active{background:var(--ink);color:var(--card);border-color:var(--ink)}
+.btn:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.btn-group{display:inline-flex;gap:0}.btn-group .btn{border-radius:0;margin-left:-1px}.btn-group .btn:first-child{border-radius:6px 0 0 6px;margin:0}.btn-group .btn:last-child{border-radius:0 6px 6px 0}
+.form-check{display:inline-flex;align-items:center;gap:6px;margin-right:14px;font-size:13px;cursor:pointer}
+.form-check-input{accent-color:var(--gold);width:16px;height:16px}
+h1{font-size:19px;font-weight:600;margin:0}
+.top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:14px}
+.price{font-size:44px;font-weight:600;line-height:1;letter-spacing:-.02em;color:var(--gold)}
+.chg{font-size:15px;font-weight:500}.up{color:var(--up)}.dn{color:var(--dn)}
+.mute{color:var(--mute);font-size:12.5px}
+.tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:10px}
+.wrap{position:relative;width:100%}canvas{display:block;width:100%}
+.tip{min-height:20px;font-size:12.5px;color:var(--mute);margin-bottom:4px}
+.sig{font-size:34px;font-weight:600;line-height:1.1;margin:4px 0}
+.meter{height:8px;border-radius:4px;background:var(--line);overflow:hidden}.meter>i{display:block;height:100%;width:50%;background:var(--gold);transition:width .4s}
+ul.why{margin:12px 0 0;padding-left:18px;font-size:13.5px}ul.why li{margin-bottom:5px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;font-size:13px}.stats b{display:block;font-size:16px;font-weight:600}
+.leg i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:5px;vertical-align:middle}
+.note{font-size:12px;color:var(--mute);margin-top:14px}
+.trade{border-top:1px solid var(--line);margin-top:16px;padding-top:12px}
+.inp{font:inherit;font-size:14px;width:84px;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.hist{max-height:200px;overflow:auto;margin-top:4px}
+.hist table{width:100%;border-collapse:collapse;font-size:12px}
+.hist th{text-align:left;font-weight:500;color:var(--mute);padding:3px 4px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--card)}
+.hist td{padding:4px;border-bottom:1px solid var(--line);white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="top">
+    <div>
+      <h1>XAU/USD gold chart with AI signal</h1>
+      <div class="price" id="price">0.00</div>
+      <div class="chg" id="chg">0.00 (0.00%)</div>
+    </div>
+    <div class="tools">
+      <div class="btn-group" id="range"><button class="btn" data-n="60">60</button><button class="btn active" data-n="100">100</button><button class="btn" data-n="160">160</button></div>
+      <button class="btn active" id="pause">Start feed</button>
+      <button class="btn" id="theme">Theme</button>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-8">
+      <div class="card"><div class="card-body">
+        <div class="tools" style="margin-bottom:6px">
+          <label class="form-check"><input class="form-check-input" type="checkbox" data-i="sma" checked><span class="leg"><i style="background:var(--sma)"></i>SMA 20</span></label>
+          <label class="form-check"><input class="form-check-input" type="checkbox" data-i="ema" checked><span class="leg"><i style="background:var(--ema)"></i>EMA 50</span></label>
+          <label class="form-check"><input class="form-check-input" type="checkbox" data-i="bb" checked><span class="leg"><i style="background:var(--bb)"></i>Bollinger 20,2</span></label>
+        </div>
+        <div class="tip" id="tip">Move over the chart to read a candle.</div>
+        <div class="wrap"><canvas id="cMain"></canvas></div>
+        <div class="mute" style="margin:8px 0 2px">RSI 14</div>
+        <div class="wrap"><canvas id="cRsi"></canvas></div>
+        <div class="mute" style="margin:8px 0 2px">MACD 12, 26, 9</div>
+        <div class="wrap"><canvas id="cMacd"></canvas></div>
+      </div></div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card"><div class="card-body">
+        <div class="mute">AI signal</div>
+        <div class="sig" id="sig">Analyzing</div>
+        <div class="mute" id="conf">Confidence 0%</div>
+        <div class="meter" style="margin-top:8px"><i id="meter"></i></div>
+        <ul class="why" id="why"></ul>
+        <div class="stats">
+          <div>RSI 14<b id="sRsi">–</b></div>
+          <div>MACD hist<b id="sMacd">–</b></div>
+          <div>Support<b id="sSup">–</b></div>
+          <div>Resistance<b id="sRes">–</b></div>
+        </div>
+        <div class="trade">
+          <div class="mute">Paper trading account</div>
+          <div class="stats">
+            <div>Balance<b id="tBal">$10,000.00</b></div>
+            <div>Equity<b id="tEq">–</b></div>
+            <div>Open P/L<b id="tOpen">$0.00</b></div>
+            <div>Realized P/L<b id="tReal">$0.00</b></div>
+          </div>
+          <div class="tools" style="margin-top:12px">
+            <input class="inp" id="qty" type="number" min="0.01" step="0.01" value="1" aria-label="Size in ounces">
+            <button class="btn" id="bBuy" style="border-color:var(--up);color:var(--up)">Buy</button>
+            <button class="btn" id="bSell" style="border-color:var(--dn);color:var(--dn)">Sell</button>
+            <button class="btn" id="bClose">Close</button>
+            <button class="btn" id="bAuto">Auto: off</button>
+          </div>
+          <div class="mute" id="tPos">No open position.</div>
+          <div class="mute" id="tMsg"></div>
+          <div class="mute" style="margin-top:12px">Trade history</div>
+          <div class="hist" id="hist"></div>
+          <button class="btn" id="bReset" style="margin-top:8px">Reset account</button>
+        </div>
+        <div class="note">Prices are simulated in your browser and the signal is a rule-based score of the indicators. It is for learning and is not financial advice. Connect a real data feed before using it for decisions.</div>
+      </div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const S={c:[],n:100,ind:{sma:1,ema:1,bb:1},hover:-1,paused:true,tick:0};
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const norm=()=>Math.random()+Math.random()+Math.random()-1.5;
+
+// ---- simulated market data ----
+function seed(){
+  let p=4020,t=0;
+  for(let i=0;i<320;i++){
+    const o=p;let h=o,l=o,c=o;
+    for(let k=0;k<12;k++){c+=norm()*2.1+Math.sin((t++)/38)*.35;h=Math.max(h,c);l=Math.min(l,c)}
+    S.c.push({o,h,l,c});p=c;
+  }
+}
+function step(){
+  if(S.paused)return;
+  let b=S.c[S.c.length-1];
+  b.c+=norm()*2.1;b.h=Math.max(b.h,b.c);b.l=Math.min(b.l,b.c);
+  if(++S.tick%12===0){S.c.push({o:b.c,h:b.c,l:b.c,c:b.c});if(S.c.length>500)S.c.shift()}
+  render();autoTrade();
+}
+
+// ---- indicators ----
+const closes=()=>S.c.map(x=>x.c);
+function sma(a,n){return a.map((_,i)=>i<n-1?null:a.slice(i-n+1,i+1).reduce((s,v)=>s+v,0)/n)}
+function ema(a,n){const k=2/(n+1);let e=null;return a.map((v,i)=>{if(v==null)return null;e=e==null?v:v*k+e*(1-k);return i<n-1?null:e})}
+function boll(a,n,m){const mid=sma(a,n);return mid.map((mu,i)=>{if(mu==null)return null;const w=a.slice(i-n+1,i+1);const sd=Math.sqrt(w.reduce((s,v)=>s+(v-mu)**2,0)/n);return{u:mu+m*sd,m:mu,l:mu-m*sd}})}
+function rsi(a,n){const out=Array(a.length).fill(null);let g=0,l=0;
+  for(let i=1;i<a.length;i++){const d=a[i]-a[i-1],G=Math.max(d,0),L=Math.max(-d,0);
+    if(i<=n){g+=G;l+=L;if(i===n){g/=n;l/=n;out[i]=100-100/(1+g/(l||1e-9))}}
+    else{g=(g*(n-1)+G)/n;l=(l*(n-1)+L)/n;out[i]=100-100/(1+g/(l||1e-9))}}
+  return out}
+function macd(a){const f=ema(a,12),s=ema(a,26);const m=a.map((_,i)=>f[i]==null||s[i]==null?null:f[i]-s[i]);
+  const sg=ema(m.map(v=>v==null?null:v),9);return{m,s:sg,h:m.map((v,i)=>v==null||sg[i]==null?null:v-sg[i])}}
+
+// ---- AI signal (rule-based scoring) ----
+function analyze(d){
+  const i=S.c.length-1,px=S.c[i].c,why=[];let sc=0;
+  if(d.ema[i]!=null){if(px>d.ema[i]){sc+=1;why.push("Price is above the EMA 50, so the trend leans up.")}else{sc-=1;why.push("Price is below the EMA 50, so the trend leans down.")}}
+  if(d.sma[i]!=null&&d.ema[i]!=null){if(d.sma[i]>d.ema[i]){sc+=1;why.push("SMA 20 sits above EMA 50: short-term momentum is stronger.")}else{sc-=1;why.push("SMA 20 sits below EMA 50: short-term momentum is weaker.")}}
+  const r=d.rsi[i];
+  if(r!=null){if(r<30){sc+=2;why.push("RSI is "+r.toFixed(0)+", an oversold reading that often precedes a bounce.")}else if(r>70){sc-=2;why.push("RSI is "+r.toFixed(0)+", an overbought reading that often precedes a pullback.")}else why.push("RSI is "+r.toFixed(0)+", in the neutral zone.")}
+  const h=d.mc.h[i],hp=d.mc.h[i-1];
+  if(h!=null&&hp!=null){if(h>0){sc+=1;why.push("MACD histogram is positive.")}else{sc-=1;why.push("MACD histogram is negative.")}
+    if(h>hp){sc+=1;why.push("MACD momentum is rising.")}else{sc-=1;why.push("MACD momentum is fading.")}}
+  const b=d.bb[i];
+  if(b){if(px<b.l){sc+=1;why.push("Price is under the lower Bollinger band, which is stretched to the downside.")}else if(px>b.u){sc-=1;why.push("Price is over the upper Bollinger band, which is stretched to the upside.")}}
+  return{sc,why,sig:sc>=3?"BUY":sc<=-3?"SELL":"HOLD",conf:Math.min(95,Math.round(45+Math.abs(sc)*8))};
+}
+
+// ---- drawing ----
+function fit(c,h){const w=c.parentElement.clientWidth,r=window.devicePixelRatio||1;
+  if(c.width!==Math.round(w*r)||c.height!==Math.round(h*r)){c.width=Math.round(w*r);c.height=Math.round(h*r);c.style.height=h+"px"}
+  const x=c.getContext("2d");x.setTransform(r,0,0,r,0,0);x.clearRect(0,0,w,h);return{x,w,h}}
+function line(x,arr,s,X,Y,col,wd){x.beginPath();let st=false;x.strokeStyle=col;x.lineWidth=wd||1.5;
+  arr.forEach((v,k)=>{if(v==null){st=false;return}const px=X(k),py=Y(v);st?x.lineTo(px,py):x.moveTo(px,py);st=true});x.stroke()}
+function grid(x,w,h,lo,hi,Y,fmt,rows){x.font="11px IBM Plex Sans,sans-serif";x.fillStyle=css("--mute");x.strokeStyle=css("--line");x.lineWidth=1;
+  for(let k=0;k<=rows;k++){const v=lo+(hi-lo)*k/rows,y=Math.round(Y(v))+.5;x.beginPath();x.moveTo(0,y);x.lineTo(w-52,y);x.stroke();x.fillText(fmt(v),w-48,y+4)}}
+
+function render(){
+  const all=S.c,N=S.n,s=Math.max(0,all.length-N),vis=all.slice(s);
+  const cl=closes(),d={sma:sma(cl,20),ema:ema(cl,50),bb:boll(cl,20,2),rsi:rsi(cl,14),mc:macd(cl)};
+  // main
+  const m=fit($("cMain"),340),x=m.x,W=m.w-52,step=W/N;
+  let hi=-1e9,lo=1e9;
+  vis.forEach((b,k)=>{hi=Math.max(hi,b.h);lo=Math.min(lo,b.l);const bb=d.bb[s+k];if(S.ind.bb&&bb){hi=Math.max(hi,bb.u);lo=Math.min(lo,bb.l)}});
+  const pad=(hi-lo)*.06;hi+=pad;lo-=pad;
+  const Y=v=>m.h-14-(v-lo)/(hi-lo)*(m.h-28),X=k=>k*step+step/2;
+  grid(x,m.w,m.h,lo,hi,Y,v=>v.toFixed(1),5);
+  if(S.ind.bb){const U=d.bb.slice(s).map(b=>b&&b.u),L=d.bb.slice(s).map(b=>b&&b.l);
+    x.fillStyle=css("--bb");x.globalAlpha=.1;x.beginPath();let first=true;
+    U.forEach((v,k)=>{if(v==null)return;first?x.moveTo(X(k),Y(v)):x.lineTo(X(k),Y(v));first=false});
+    for(let k=L.length-1;k>=0;k--)if(L[k]!=null)x.lineTo(X(k),Y(L[k]));x.fill();x.globalAlpha=1;
+    line(x,U,0,X,Y,css("--bb"),1);line(x,L,0,X,Y,css("--bb"),1)}
+  vis.forEach((b,k)=>{const up=b.c>=b.o,col=up?css("--up"):css("--dn"),cx=X(k);
+    x.strokeStyle=col;x.fillStyle=col;x.lineWidth=1;x.beginPath();x.moveTo(cx,Y(b.h));x.lineTo(cx,Y(b.l));x.stroke();
+    const top=Y(Math.max(b.o,b.c)),bh=Math.max(1,Math.abs(Y(b.o)-Y(b.c)));x.fillRect(cx-step*.35,top,step*.7,bh)});
+  if(S.ind.sma)line(x,d.sma.slice(s),0,X,Y,css("--sma"),1.6);
+  if(S.ind.ema)line(x,d.ema.slice(s),0,X,Y,css("--ema"),1.6);
+  const last=all[all.length-1].c;x.strokeStyle=css("--gold");x.setLineDash([4,4]);x.beginPath();x.moveTo(0,Y(last));x.lineTo(W,Y(last));x.stroke();x.setLineDash([]);
+  x.fillStyle=css("--gold");x.fillRect(W+2,Y(last)-9,50,18);x.fillStyle=css("--card");x.fillText(last.toFixed(1),W+6,Y(last)+4);
+  if(S.hover>=0){x.strokeStyle=css("--mute");x.beginPath();x.moveTo(X(S.hover),0);x.lineTo(X(S.hover),m.h);x.stroke()}
+  // rsi
+  const r=fit($("cRsi"),100),rx=r.x,RY=v=>r.h-8-(v/100)*(r.h-16);
+  grid(rx,r.w,r.h,0,100,RY,v=>v.toFixed(0),4);
+  rx.fillStyle=css("--dn");rx.globalAlpha=.08;rx.fillRect(0,RY(100),W,RY(70)-RY(100));rx.fillStyle=css("--up");rx.fillRect(0,RY(30),W,RY(0)-RY(30));rx.globalAlpha=1;
+  line(rx,d.rsi.slice(s),0,X,RY,css("--gold"),1.6);
+  // macd
+  const q=fit($("cMacd"),110),qx=q.x,hs=d.mc.h.slice(s),ms=d.mc.m.slice(s),ss=d.mc.s.slice(s);
+  const vals=[...hs,...ms,...ss].filter(v=>v!=null),mx=Math.max(1e-6,...vals.map(Math.abs))*1.1;
+  const MY=v=>q.h/2-(v/mx)*(q.h/2-8);
+  grid(qx,q.w,q.h,-mx,mx,MY,v=>v.toFixed(1),2);
+  hs.forEach((v,k)=>{if(v==null)return;qx.fillStyle=v>=0?css("--up"):css("--dn");qx.globalAlpha=.55;qx.fillRect(X(k)-step*.35,Math.min(MY(0),MY(v)),step*.7,Math.abs(MY(v)-MY(0)));qx.globalAlpha=1});
+  line(qx,ms,0,X,MY,css("--sma"),1.4);line(qx,ss,0,X,MY,css("--ema"),1.4);
+  // panel
+  const f=all[all.length-1],ch=f.c-all[all.length-2].c,first=all[Math.max(0,all.length-12)].o;
+  $("price").textContent=f.c.toFixed(2);
+  const dd=f.c-first;$("chg").textContent=(dd>=0?"+":"")+dd.toFixed(2)+" ("+(dd/first*100).toFixed(2)+"%)";$("chg").className="chg "+(dd>=0?"up":"dn");
+  const a=analyze(d);S.a=a;
+  $("sig").textContent=a.sig;$("sig").className="sig "+(a.sig==="BUY"?"up":a.sig==="SELL"?"dn":"");
+  $("conf").textContent="Confidence "+a.conf+"% · score "+(a.sc>0?"+":"")+a.sc;$("meter").style.width=a.conf+"%";
+  $("why").innerHTML=a.why.map(t=>"<li>"+t+"</li>").join("");
+  const i=all.length-1;$("sRsi").textContent=d.rsi[i]==null?"–":d.rsi[i].toFixed(1);
+  $("sMacd").textContent=d.mc.h[i]==null?"–":d.mc.h[i].toFixed(2);
+  $("sSup").textContent=Math.min(...vis.map(b=>b.l)).toFixed(1);$("sRes").textContent=Math.max(...vis.map(b=>b.h)).toFixed(1);
+  S.d=d;S.s=s;trade();
+}
+
+// ---- events ----
+$("cMain").addEventListener("pointermove",e=>{
+  const rc=e.currentTarget.getBoundingClientRect(),W=rc.width-52,k=Math.floor((e.clientX-rc.left)/(W/S.n));
+  const b=S.c[S.s+k];if(!b||k>=S.n){S.hover=-1;return}S.hover=k;
+  const d=S.d,i=S.s+k,f=v=>v==null?"–":v.toFixed(1);
+  $("tip").textContent="O "+b.o.toFixed(1)+"  H "+b.h.toFixed(1)+"  L "+b.l.toFixed(1)+"  C "+b.c.toFixed(1)+"   SMA "+f(d.sma[i])+"  EMA "+f(d.ema[i])+"  RSI "+f(d.rsi[i]);render()});
+$("cMain").addEventListener("pointerleave",()=>{S.hover=-1;$("tip").textContent="Move over the chart to read a candle.";render()});
+document.querySelectorAll("[data-i]").forEach(el=>el.addEventListener("change",()=>{S.ind[el.dataset.i]=el.checked?1:0;render()}));
+document.querySelectorAll("#range .btn").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll("#range .btn").forEach(x=>x.classList.remove("active"));b.classList.add("active");S.n=+b.dataset.n;render()}));
+$("pause").addEventListener("click",e=>{S.paused=!S.paused;e.target.textContent=S.paused?"Start feed":"Pause feed";e.target.classList.toggle("active",S.paused)});
+$("theme").addEventListener("click",()=>{const r=document.documentElement,dark=r.dataset.theme?r.dataset.theme==="dark":matchMedia("(prefers-color-scheme:dark)").matches;r.dataset.theme=dark?"light":"dark";render()});
+window.addEventListener("resize",render);
+// ---- paper trading panel ----
+const START=10000,T={bal:START,pos:null,hist:[],key:"",auto:false,cool:0};
+try{const sv=JSON.parse(localStorage.getItem("goldTrade")||"null");if(sv&&typeof sv.bal==="number"){T.bal=sv.bal;T.hist=sv.hist||[]}}catch(e){}
+const money=v=>(v<0?"-":"")+"$"+Math.abs(v).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+const save=()=>{try{localStorage.setItem("goldTrade",JSON.stringify({bal:T.bal,hist:T.hist}))}catch(e){}};
+const lastPx=()=>S.c[S.c.length-1].c;
+const openPL=()=>T.pos?(lastPx()-T.pos.entry)*T.pos.qty*(T.pos.side==="BUY"?1:-1):0;
+function openTrade(side){
+  if(T.pos)return;
+  const q=Math.max(0.01,parseFloat($("qty").value)||0);
+  if(!q){$("tMsg").textContent="Enter a size of at least 0.01 oz.";return}
+  if(q*lastPx()/20>T.bal){$("tMsg").textContent="Not enough balance for this size (1:20 leverage). Lower the size.";return}
+  T.pos={side:side,qty:q,entry:lastPx()};$("tMsg").textContent="";trade();
+}
+function closeTrade(){
+  if(!T.pos)return;
+  const p=openPL();T.bal+=p;
+  T.hist.unshift({t:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit",second:"2-digit"}),side:T.pos.side,qty:T.pos.qty,entry:T.pos.entry,exit:lastPx(),pnl:p});
+  T.hist=T.hist.slice(0,50);T.pos=null;save();trade();
+}
+function trade(){
+  const o=openPL(),real=T.bal-START,cls=v=>v>=0?"up":"dn";
+  $("tBal").textContent=money(T.bal);
+  $("tEq").textContent=money(T.bal+o);
+  $("tOpen").textContent=money(o);$("tOpen").className=cls(o);
+  $("tReal").textContent=money(real);$("tReal").className=cls(real);
+  $("tPos").textContent=T.pos?(T.pos.side==="BUY"?"Long ":"Short ")+T.pos.qty+" oz at "+T.pos.entry.toFixed(2):"No open position.";
+  $("bBuy").disabled=$("bSell").disabled=!!T.pos||T.auto;$("bClose").disabled=!T.pos;$("bAuto").textContent=T.auto?"Auto: on":"Auto: off";$("bAuto").classList.toggle("active",T.auto);
+  const k=T.hist.length+"|"+T.bal;
+  if(k!==T.key){T.key=k;
+    $("hist").innerHTML=T.hist.length?"<table><thead><tr><th>Time</th><th>Side</th><th>Oz</th><th>Entry</th><th>Exit</th><th>P/L</th></tr></thead><tbody>"+T.hist.map(h=>"<tr><td>"+h.t+"</td><td class='"+(h.side==="BUY"?"up":"dn")+"'>"+h.side+"</td><td>"+h.qty+"</td><td>"+h.entry.toFixed(2)+"</td><td>"+h.exit.toFixed(2)+"</td><td class='"+cls(h.pnl)+"'>"+money(h.pnl)+"</td></tr>").join("")+"</tbody></table>":"<div class='mute'>No closed trades yet.</div>"}
+}
+$("bBuy").addEventListener("click",()=>openTrade("BUY"));
+$("bSell").addEventListener("click",()=>openTrade("SELL"));
+$("bClose").addEventListener("click",closeTrade);
+$("bReset").addEventListener("click",()=>{T.bal=START;T.pos=null;T.hist=[];T.key="";save();$("tMsg").textContent="";trade()});
+// ---- AI auto-trading ----
+const SL=6,TP=10,COOL=8;
+function autoTrade(){
+  if(!T.auto||!S.a||S.paused)return;
+  const sig=S.a.sig;
+  if(T.pos){
+    const pl=openPL()/T.pos.qty,opp=(T.pos.side==="BUY"&&sig==="SELL")||(T.pos.side==="SELL"&&sig==="BUY");
+    if(pl<=-SL||pl>=TP||opp){const why=pl<=-SL?"stop loss hit":pl>=TP?"take profit hit":"signal reversed";closeTrade();T.cool=S.tick+COOL;$("tMsg").textContent="AI closed the trade: "+why+"."}
+    return;
+  }
+  if(S.tick<T.cool||sig==="HOLD")return;
+  openTrade(sig);
+  if(T.pos)$("tMsg").textContent="AI opened a "+(sig==="BUY"?"long":"short")+" on a "+sig+" signal.";
+}
+$("bAuto").addEventListener("click",()=>{T.auto=!T.auto;$("tMsg").textContent=T.auto?(S.paused?"Auto-trade is on. Tap Start feed so the AI can trade.":"Auto-trade is on. The AI trades on BUY and SELL signals."):"Auto-trade is off.";trade()});
+seed();render();setInterval(step,700);
+})();
+</script>
+</body>
+</html>
